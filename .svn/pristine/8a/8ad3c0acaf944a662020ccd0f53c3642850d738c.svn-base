@@ -1,0 +1,104 @@
+package src.src.model;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.After;
+import org.junit.Test;
+
+import src.src.utilities.Mode;
+import src.src.views.IListener;
+import src.src.views.Player;
+
+/**
+ * Only covers tests that are case-specific (ie. ones that 
+ * are different from that of the HUMAN mode behaviour.
+ */
+public class GameModeHumanvsComputerTests {
+  
+  @Test
+  public void testSingletonBehavior() {
+    GameMode newGame = GameModeHumanvsComputer.getModelInstance(1);
+    GameMode secondNewGame = GameModeHumanvsComputer.getModelInstance(3);
+    assertEquals(newGame, secondNewGame);
+  }
+  
+  @Test
+  public void testFactoryMethodForComputerMode() {
+    GameMode model = GameModel.getGameModel(Mode.COMPUTER, 4);
+    assertEquals(model.getNumberOfPlayers(), 1);
+  }
+  
+  @Test
+  public void testRegister_OnePlayer() {
+    GameMode model = GameModel.getGameModel(Mode.COMPUTER, 7);
+    IListener listener1 = new Player(model);
+    assertEquals(listener1.getPiece(), 'Y');
+  }
+  
+  @Test(expected = UnsupportedOperationException.class)
+  public void testRegister_TwoPlayers() {
+    GameMode model = GameModel.getGameModel(Mode.COMPUTER, 7);
+    new Player(model);
+    new Player(model);
+  }
+  
+  @Test
+  public void testTurns_ValidPlay() {
+    GameMode model = GameModel.getGameModel(Mode.COMPUTER, 7);
+    IListener listener1 = new Player(model);
+    assertTrue(model.selectColumnForMove(listener1, 3));
+    assertTrue(model.selectColumnForMove(listener1, 2));
+    int count = 0;
+    for (char[] row : model.getCopyOfGameBoard()) {
+      for (char piece : row) {
+        if (piece != ' ') {
+          count ++;
+        }
+      }
+    }
+    assertEquals(count, 4);
+  }
+  
+  @Test
+  public void testWin() {
+    GameMode model = GameModel.getGameModel(Mode.COMPUTER, 1);
+    IListener listener1 = new Player(model);
+    model.registerListener(listener1, true);
+    assertTrue(model.selectColumnForMove(listener1, 0));
+    assertTrue(model.selectColumnForMove(listener1, 0));
+    assertTrue(((GameModeHumanvsComputer)model).getGameInProgress());
+    assertTrue(model.selectColumnForMove(listener1, 0));
+    assertFalse(((GameModeHumanvsComputer)model).getGameInProgress());
+  }
+  
+  @Test
+  public void testPlayerComputerAlternatePlay() {
+    GameMode model = GameModel.getGameModel(Mode.COMPUTER, 1);
+    IListener listener1 = new Player(model);
+    model.registerListener(listener1, true);
+    assertTrue(model.selectColumnForMove(listener1, 0));
+    assertTrue(model.selectColumnForMove(listener1, 0));
+    int countPlayer = 0;
+    int countComputer = 0;
+    char[][] copyBoard = model.getCopyOfGameBoard();
+    for (char[] row : copyBoard) {
+      for (char piece : row) {
+        if (piece == 'Y') {
+          countPlayer ++;
+        } else if (piece == 'R') {
+          countComputer ++;
+        }
+      }
+    }
+    assertEquals(countComputer, 2);
+    assertEquals(countPlayer, 2);
+  }
+  
+  @After
+  public void cleanUp() {
+    GameMode newGame = GameModeHumanvsComputer.getModelInstance(1);
+    ((GameModeHumanvsComputer)newGame).setSingleInstanceToNull();
+  }
+}

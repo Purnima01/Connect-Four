@@ -1,0 +1,276 @@
+package src.src.model;
+
+import static org.junit.Assert.*;
+
+import org.junit.*;
+
+public class GameBoardTests {
+  GameBoard board1;
+  @Before
+  public void setUp() {
+    board1 = new GameBoard.Builder().build();
+  }
+  
+  @Test
+  public void testGameBoardInitialize() {
+    char[][] board2 = new char[6][7];
+    for (int i = 0; i < 6; i ++) {
+      for (int j = 0; j < 7; j ++) {
+        board2[i][j] = ' ';
+        char[][] compareBoard = board1.getBoardForTesting();
+        assertEquals(board2[i][j], compareBoard[i][j]);
+      }
+    }
+  }
+  
+  @Test
+  public void testDeepCopyBoard() {
+    char[][] boardCopy = board1.returnBoardCurrentState();
+    assertNotEquals(boardCopy, board1);
+  }
+  
+  @Test
+  public void testgetFirstEmptyRowFromBottom() {
+    board1 = new GameBoard.Builder().numberOfColumns(2).build();
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(0, 'Y');
+    assertEquals(board1.getFirstEmptyRowFromBottom(0), 3);
+  }
+  
+  @Test
+  public void testVerticalWin() {
+    board1 = new GameBoard.Builder().numberOfColumns(2).build();
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(0, 'Y');
+    int row = board1.getFirstEmptyRowFromBottom(0);
+    assertEquals(board1.findWinner(row + 1, 0), 'Y');
+  }
+  
+  @Test
+  public void horizontalWin() {
+    board1 = new GameBoard.Builder().numberOfColumns(5).build();
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(3, 'R');
+    board1.updateBoardForMove(2, 'R');
+    assertTrue(board1.horizontalWin(5, 1, 'R'));
+    assertFalse(board1.horizontalWin(5, 1, 'Y'));
+  }
+  
+  @Test
+  public void horizontalWin_Fail() {
+    board1 = new GameBoard.Builder().numberOfColumns(5).build();
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(3, 'R');
+    board1.updateBoardForMove(4, 'R');
+    assertFalse(board1.horizontalWin(5, 1, 'R'));
+  }
+  
+  @Test
+  public void testLeftDiagonalWin() {
+    board1 = new GameBoard.Builder().numberOfColumns(4).build();
+    board1.updateBoardForMove(3, 'R');
+    board1.updateBoardForMove(2, 'R');
+    board1.updateBoardForMove(2, 'R');
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    assertTrue(board1.leftDiagonalWin(2, 0, 'R'));
+  }
+  
+  @Test
+  public void testRightDiagonalWin() {
+    board1 = new GameBoard.Builder().numberOfColumns(4).build();
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    board1.updateBoardForMove(3, 'Y');
+    board1.updateBoardForMove(3, 'Y');
+    board1.updateBoardForMove(3, 'Y');
+    board1.updateBoardForMove(3, 'Y');
+    assertTrue(board1.rightDiagonalWin(4, 1, 'Y'));
+  }
+  
+  @Test
+  public void testComputerWinMove_rightDiagonalWin() {
+    board1 = new GameBoard.Builder().numberOfColumns(4).build();
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    board1.updateBoardForMove(3, 'R');
+    board1.updateBoardForMove(2, 'R');
+    board1.updateBoardForMove(3, 'Y');
+    board1.updateBoardForMove(3, 'Y');
+    board1.updateBoardForMove(0, 'R');
+    assertEquals(board1.computerFindNextWinMove('Y'), 3);
+  }
+  
+  @Test
+  public void testComputerWinMove() {
+    board1 = new GameBoard.Builder().numberOfColumns(4).build();
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    int column = board1.computerFindNextWinMove('Y');
+    board1.updateBoardForMove(column, 'Y');
+    int row = board1.getMostRecentRowFilled(column);
+    assertEquals(board1.findWinner(row, column), 'Y');
+  }
+  
+  @Test
+  public void testComputerWinMove_NoWinMove() {
+    board1 = new GameBoard.Builder().numberOfColumns(4).build();
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    board1.updateBoardForMove(2, 'Y');
+    board1.updateBoardForMove(3, 'Y');
+    board1.updateBoardForMove(3, 'Y');
+    board1.updateBoardForMove(3, 'Y');
+    board1.updateBoardForMove(3, 'R');
+    board1.updateBoardForMove(0, 'R');
+    assertEquals(board1.computerFindNextWinMove('Y'), -1);
+  }
+  
+  @Test
+  public void testFindWinner_YWinsVertical() {
+    board1 = new GameBoard.Builder().numberOfColumns(4).build();
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(0, 'Y');
+    assertEquals(board1.findWinner(2, 0), 'Y');
+  }
+  
+  @Test
+  public void testFindWinner_NoWinner() {
+    board1 = new GameBoard.Builder().numberOfColumns(5).build();
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(2, 'R');
+    board1.updateBoardForMove(3, 'Y');
+    board1.updateBoardForMove(4, 'Y');
+    assertEquals(board1.findWinner(5, 1), 'N');
+  }
+  
+  @Test
+  public void testFindWinner_RWinsHorizontal() {
+    board1 = new GameBoard.Builder().numberOfColumns(5).build();
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(2, 'R');
+    board1.updateBoardForMove(3, 'R');
+    board1.updateBoardForMove(1, 'R');
+    assertEquals(board1.findWinner(5, 1), 'R');
+  }
+  
+  @Test
+  public void testGameOver() {
+    board1 = new GameBoard.Builder().numberOfColumns(2).build();
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'Y');
+    
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(1, 'R');
+    assertTrue(board1.isGameOver());
+  }
+  
+  @Test
+  public void testGameNotOver() {
+    board1 = new GameBoard.Builder().numberOfColumns(2).build();
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'Y');
+    board1.updateBoardForMove(0, 'R');
+    
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(1, 'Y');
+    board1.updateBoardForMove(1, 'R');
+    assertFalse(board1.isGameOver());
+  }
+  
+  @Test
+  public void testGetMostRecentRowFilled() {
+    board1 = new GameBoard.Builder().numberOfColumns(2).build();
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'Y');
+    assertEquals(board1.getMostRecentRowFilled(0), 2);
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    assertEquals(board1.getMostRecentRowFilled(0), 0);
+  }
+  
+  @Test
+  public void testComputerRegularMove() {
+    board1 = new GameBoard.Builder().numberOfColumns(3).build();
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(1, 'R');    
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'R');
+    board1.updateBoardForMove(1, 'R');
+    assertEquals(board1.computerFindNextRegularMove(), 2);
+  }
+  
+  @Test
+  public void testNumberColumnsValidity() {
+    board1 = new GameBoard.Builder().numberOfColumns(0).build();
+    assertEquals(board1.getNumberOfCols(), 7);
+  }
+  
+  @Test
+  public void testBoardReset() {
+    board1 = new GameBoard.Builder().numberOfColumns(2).build();
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    char[][] boardTest = board1.getBoardForTesting();
+    assertEquals(boardTest[5][0],  'R');
+    board1.resetBoard();
+    boardTest = board1.getBoardForTesting();
+    assertEquals(boardTest[5][0],  ' ');
+  }
+  
+  @Test
+  public void testBoardDeepCopy() {
+    board1 = new GameBoard.Builder().numberOfColumns(2).build();
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    board1.updateBoardForMove(0, 'R');
+    char[][] copyOfBoard = board1.returnBoardCurrentState();
+    assertNotEquals(copyOfBoard, board1.getBoardForTesting());
+    assertTrue(board1.compareBoardContents(board1.getBoardForTesting(), copyOfBoard));
+  }
+  
+}
