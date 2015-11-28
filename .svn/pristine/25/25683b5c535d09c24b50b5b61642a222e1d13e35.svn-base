@@ -1,5 +1,0 @@
-package src.src.utilities;
-
-public enum Mode {
-  HUMAN, COMPUTER;
-}
