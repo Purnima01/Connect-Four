@@ -157,7 +157,8 @@ class GameBoard {
   }
   
   /*
-   * @param row, col : Player places piece at row, col.
+   * @param row, col : Player places piece at row, col
+   * @paran playerPieceColor : color of the player's piece
    * Checks if the next three pieces (below) 
    * current piece belong to the same player.
    * It does not also count the current piece
