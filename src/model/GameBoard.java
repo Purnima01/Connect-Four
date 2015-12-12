@@ -111,7 +111,8 @@ class GameBoard {
     return true;
   }
   
-  /**first empty row for a column
+  /**
+   * First empty row for a column
    * @return -1 if column is full
    */
   public int getFirstEmptyRowFromBottom(int col) {
