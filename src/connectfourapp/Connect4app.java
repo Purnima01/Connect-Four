@@ -6,7 +6,6 @@ import utilities.Mode;
 import views.PlayerGUI;
 
 /**
- *
  * Enter a column (zero-based indexing) to append disk to.
  * 
  * Game auto-begins once required number of players have registered.
@@ -21,7 +20,6 @@ import views.PlayerGUI;
  * 
  * Please enter your column number (0-6) in the text box; do not click
  * on any cell in the table.
- * 
  */
 public class Connect4app {
   private void startGame() {

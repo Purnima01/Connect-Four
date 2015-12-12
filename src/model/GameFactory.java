@@ -6,12 +6,14 @@ import utilities.Mode;
 
 public class GameFactory {
   
-  public static IGameMode getGameModel(Mode human) {
+  public static IGameMode getGameModel(Mode mode) {
     IGameMode model = null;
-    if (human == Mode.HUMAN) {
+    if (mode == Mode.HUMAN) {
       model = GameModeHumanvsHuman.getModelInstance();
-    } else if (human == Mode.COMPUTER){
+    } else if (mode == Mode.COMPUTER){
       model = GameModeHumanvsComputer.getModelInstance();
+    } else {
+      throw new NullPointerException();
     }
     return model;
   }
