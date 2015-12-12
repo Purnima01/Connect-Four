@@ -1,58 +1,13 @@
 package model;
-import java.util.HashSet;
-import java.util.Set;
-
 import utilities.ListenerInformation;
 import views.IListener;
 
-public class GameModeHumanvsHuman implements IGameMode {
+public class GameModeHumanvsHuman extends GameModeBase {
   private static GameModeHumanvsHuman singleInstance = null;
-  private static GameBoard board;
-  private Set<IListener> listeners;
-  private IListener player1;
-  private IListener player2;
-  private int playerCount;
-  private int allowedNumberOfPlayers;
-  private boolean gameInProgress;
-  private IListener turnOfPlayer;
-  //Unique ID for every non-player listener
-  private int listenerID;
-  private final char noWinner = 'N';
-  private final char player1color = 'Y';
-  private final char player2color = 'R';
-  
-  private void initializeGame() {
-    playerCount = 0;
-    allowedNumberOfPlayers = 2;
-    gameInProgress = false;
-    listeners = new HashSet<IListener>();
-    player1 = null;
-    player2 = null;
-    turnOfPlayer = null;
-    listenerID = 0;
-    board = new GameBoard();
-  }
-  
-  /**For testing purposes only*/
-  void setSingleInstanceToNull() {
-    singleInstance = null;
-  }
-  
-  /**
-   * Returns number of players - for testing 
-   */
-  @Override
-  public int getNumberOfPlayers() {
-    return allowedNumberOfPlayers;
-  }
-  
-  /*For tests only*/
-  public int getNumberOfRegisteredPlayers() {
-    return playerCount;
-  }
+  private IListener turnOfPlayer = null;
   
   private GameModeHumanvsHuman() {
-    initializeGame();
+    initializeGame(2);
   }
   
   /**
@@ -65,15 +20,6 @@ public class GameModeHumanvsHuman implements IGameMode {
     }
     singleInstance = new GameModeHumanvsHuman();
     return singleInstance;
-  }
-
-  private ListenerInformation nonPlayerListener(IListener newListener) {
-    listeners.add(newListener);
-    String listenerNumber = String.valueOf(listenerID);
-    String id = "Listener" + listenerNumber;
-    ListenerInformation newListenerInformation = new ListenerInformation('G', id); 
-    listenerID ++;
-    return newListenerInformation;
   }
   
   /**
@@ -113,10 +59,6 @@ public class GameModeHumanvsHuman implements IGameMode {
     }
     return newInformation;
   }
-  
-  private ListenerInformation getPlayerInformation(char playerPieceColor, String playerID) {
-    return new ListenerInformation(playerPieceColor, playerID);
-  }
 
   @Override
   public boolean selectColumnForMove(IListener player, int column) {
@@ -139,41 +81,13 @@ public class GameModeHumanvsHuman implements IGameMode {
     }
     int row = board.getMostRecentRowFilled(column);
     char winner = board.findWinner(row, column, player1color, player2color, noWinner);
-    if (winner != noWinner) {
-      fireGameWonEvent(player.getPiece());
-      gameInProgress = false;
+    if (winnerCheckRoutine(winner, player.getPiece())) {
       return true;
     }
-    if (board.isGameOver()) {
-      fireGameTied();
-      gameInProgress = false;
+    if (gameOverCheckRoutine()) {
       return true;
     }
     return true;
-  }
-  
-  public void fireMoveMadeEvent() {
-    for (IListener view : listeners) {
-      view.correctMoveNotify();
-    }
-  }
-  
-  public void fireGameWonEvent(char winnerPiece) {
-    for (IListener view : listeners) {
-      view.gameWinNotify(winnerPiece);
-    }
-  }
-  
-  public void fireGameTied() {
-    for (IListener view : listeners) {
-      view.gameTied();
-    }
-  }
-  
-  public void startGameNotify(IListener firstPlayerToGo) {
-    for (IListener view : listeners) {
-      view.gameStartSignal(firstPlayerToGo);
-    }
   }
 
   void toggleTurnOfPlayer() {
@@ -182,25 +96,5 @@ public class GameModeHumanvsHuman implements IGameMode {
     } else {
       turnOfPlayer = player1;
     }
-  }
-  
-  /*Only for testing toggleTurnOfPlayer()*/
-  IListener getCurrentPlayer() {
-    return turnOfPlayer;
-  }
-
-  @Override
-  public char[][] getCopyOfGameBoard() {
-    return board.returnBoardCurrentState();
-  }
-  
-  @Override
-  public int getNumberOfCols() {
-    return board.getNumberOfCols();
-  }
-
-  @Override
-  public int getNumberOfRows() {
-    return board.getNumberOfRows();
   }
 }

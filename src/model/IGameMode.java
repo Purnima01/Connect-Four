@@ -36,9 +36,4 @@ public interface IGameMode {
    */
   int getNumberOfRows();
 
-  /**
-   * Get number of players 
-   */
-  int getNumberOfPlayers();
-
 }

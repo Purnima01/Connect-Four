@@ -1,44 +1,16 @@
 package model;
-import java.util.HashSet;
-import java.util.Set;
-
 import utilities.ListenerInformation;
 import views.IListener;
 
 /**
- * Similar to HumanvsHuman for the most part. However,
- * I decided to create a separate class so I can implement
- * the factory pattern according to the user's preference.
- * 
  * Computer plays as the second player - R.
  */
-public class GameModeHumanvsComputer implements IGameMode {
+public class GameModeHumanvsComputer extends GameModeBase {
   private static GameModeHumanvsComputer singleInstance = null;
-  private static GameBoard board;
-  private Set<IListener> listeners;
-  private IListener player1;
-  private int playerCount;
-  private int allowedNumberOfPlayers;
-  private boolean gameInProgress;
-  //Unique ID for every non-player listener
-  private int listenerID;
-  private char player1color = 'Y';
-  private char player2color = 'R';
   private char computerPiece = player2color;
-  private final char noWinner = 'N';
-  
-  private void initializeGame() {
-    playerCount = 0;
-    allowedNumberOfPlayers = 1;
-    gameInProgress = false;
-    listeners = new HashSet<IListener>();
-    player1 = null;
-    listenerID = 0;
-    board = new GameBoard();
-  }
   
   private GameModeHumanvsComputer() {
-    initializeGame();
+    initializeGame(1);
   }
   
   /**
@@ -51,15 +23,6 @@ public class GameModeHumanvsComputer implements IGameMode {
     }
     singleInstance = new GameModeHumanvsComputer();
     return singleInstance;
-  }
-  
-  private ListenerInformation nonPlayerListener(IListener newListener) {
-    listeners.add(newListener);
-    String listenerNumber = String.valueOf(listenerID);
-    String id = "Listener" + listenerNumber;
-    ListenerInformation newListenerInformation = new ListenerInformation('G', id); 
-    listenerID ++;
-    return newListenerInformation;
   }
   
   @Override
@@ -133,77 +96,6 @@ public class GameModeHumanvsComputer implements IGameMode {
       computerSelectedColumn = board.computerFindNextRegularMove();
     }
     return computerSelectedColumn;
-  }
-  
-  private boolean winnerCheckRoutine(char winner, char playerPiece) {
-    if (winner != noWinner) {
-      fireGameWonEvent(playerPiece);
-      gameInProgress = false;
-      return true;
-    }
-    return false;
-  }
-  
-  /*For testing purposes only*/
-  public boolean getGameInProgress() {
-    return gameInProgress;
-  }
-  
-  private boolean gameOverCheckRoutine() {
-    if (board.isGameOver()) {
-      fireGameOverEvent();
-      gameInProgress = false;
-      return true;
-    }
-    return false;
-  }
-  
-  public void fireMoveMadeEvent() {
-    for (IListener view : listeners) {
-      view.correctMoveNotify();
-    }
-  }
-  
-  public void fireGameWonEvent(char winnerPiece) {
-    for (IListener view : listeners) {
-      view.gameWinNotify(winnerPiece);
-    }
-  }
-  
-  public void fireGameOverEvent() {
-    for (IListener view : listeners) {
-      view.gameTied();
-    }
-  }
-  
-  public void startGameNotify(IListener firstPlayerToGo) {
-    for (IListener view : listeners) {
-      view.gameStartSignal(firstPlayerToGo);
-    }
-  }
-
-  @Override
-  public char[][] getCopyOfGameBoard() {
-    return board.returnBoardCurrentState();
-  }
-  
-  @Override
-  public int getNumberOfPlayers() {
-    return allowedNumberOfPlayers;
-  }
-
-  void setSingleInstanceToNull() {
-    singleInstance = null;
-  }
-
-  @Override
-  public int getNumberOfCols() {
-    return board.getNumberOfCols();
-  }
-
-  @Override
-  public int getNumberOfRows() {
-    return board.getNumberOfRows();
   }
   
 }
