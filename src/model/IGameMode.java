@@ -7,7 +7,7 @@ import views.IListener;
  * model (GameMode) object. Model object is a singleton.
  */
 
-public interface GameMode {
+public interface IGameMode {
   /**
    * Used to register listeners with the model.
    * Assumes game begins once expected number of players
@@ -20,14 +20,7 @@ public interface GameMode {
    * @return true if move was successful, false otherwise
    */
   boolean selectColumnForMove(IListener player, int col);
-  
-  /**
-   * Resets the model object (game) to start state.
-   * Throws UnsupportedOperationException if game is in progress.
-   * @return true if game has been successfully reset.
-   */
-  boolean resetGame(boolean shutWindow);
-  
+
   /**
    * Returns a deep copy of the game board as of current state
    */
@@ -36,7 +29,12 @@ public interface GameMode {
   /**
    * Get number of columns on board
    */
-  int getNumberOfColumnsOnBoard();
+  int getNumberOfCols();
+  
+  /**
+   * Get number of rows on board
+   */
+  int getNumberOfRows();
 
   /**
    * Get number of players 

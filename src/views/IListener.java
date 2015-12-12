@@ -20,7 +20,7 @@ public interface IListener {
   void gameWinNotify(char winnerPiece);
   
   /**Game ended without a winner*/
-  void gameOverNotify();
+  void gameTied();
   
   /**Get player's disk color*/
   char getPiece();

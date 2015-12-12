@@ -1,28 +1,28 @@
 package connectfourapp;
 
-import model.GameMode;
-import model.GameModel;
+import model.GameFactory;
+import model.IGameMode;
 import utilities.Mode;
-import views.Player;
+import views.PlayerGUI;
 
 /**
- * @author purnima
  * 
  * Enter a column (zero-based indexing) to append disk to.
  * 
  * Game auto-begins once required number of players have registered.
- * Game auto-resets after it is over. 
+ * Game auto-resets after it is over, which happens if there is a winner
+ * or a tie. 
  * 
- * First player - Yellow. Second player/Computer - Red.
+ * First PlayerGUI - Yellow. Second PlayerGUI/Computer - Red.
  * 
- * Please enter your column number in the text box. Do not click
+ * Please enter your column number in the text box; do not click
  * on any cell in the table.
+ * 
  */
 public class Connect4app {
   private void startGame() {
-    GameMode model = GameModel.getGameModel(Mode.COMPUTER);
-    new Player(model);
-    //new Player(model);
+    IGameMode model = GameFactory.getGameModel(Mode.COMPUTER);
+    new PlayerGUI(model);
   }
   
   public static void main(String[] args) {

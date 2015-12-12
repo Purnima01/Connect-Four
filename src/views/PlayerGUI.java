@@ -13,16 +13,14 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
-import model.GameMode;
+import model.IGameMode;
 import utilities.ListenerInformation;
 
+public class PlayerGUI implements IListener {
 
-public class Player implements IListener {
-
-  private GameMode model;
+  private IGameMode model;
   private char piece;
   private String id;
-  
   private ImageIcon emptyIcon;
   private ImageIcon opponentColorIcon;
   private ImageIcon myColorIcon;
@@ -30,14 +28,19 @@ public class Player implements IListener {
   private JFrame frame = new JFrame("CONNECT FOUR");
   private JTextField textField = new JTextField();
   private JTable table;
-  private JButton reset = new JButton("Reset Game");
   private JButton submit = new JButton("Submit Column");
+  private JPanel panel;
+  private JPanel bottomPanel;
+  private final int numRows;
+  private final int numCols;
+  private final char player1Color = 'Y';
+  private final char player2Color = 'R';
   
-  public Player(GameMode model) {
+  public PlayerGUI(IGameMode model) {
     this.model = model;
     ListenerInformation playerInfo = model.registerListener(this, true);
     
-    /*If more than allowed number of players register or player re-registers,
+    /*If more than allowed number of players register or PlayerGUI re-registers,
       do not allow - throw exception to indicate this*/
     if (playerInfo == null) {
       throw new UnsupportedOperationException();
@@ -46,16 +49,15 @@ public class Player implements IListener {
     piece = playerInfo.getPieceColor();
     id = playerInfo.getId();
 
-    int numRows = 6;
-    int numCols = model.getNumberOfColumnsOnBoard();
-    
+    numRows = model.getNumberOfRows();
+    numCols = model.getNumberOfCols();
     
     emptyIcon = new ImageIcon(this.getClass().getResource("/images/unoccupied.png"));
     blackIcon = new ImageIcon(this.getClass().getResource("/images/black.png"));
-    if (getPiece() == 'Y') {
+    if (getPiece() == player1Color) {
       myColorIcon = new ImageIcon(this.getClass().getResource("/images/yellow.png"));
       opponentColorIcon = new ImageIcon(this.getClass().getResource("/images/red.png"));
-    } else if (getPiece() == 'R') {
+    } else if (getPiece() == player2Color) {
       myColorIcon = new ImageIcon(this.getClass().getResource("/images/red.png"));
       opponentColorIcon = new ImageIcon(this.getClass().getResource("/images/yellow.png"));
     } else {
@@ -78,56 +80,25 @@ public class Player implements IListener {
       }
     }
     
-    JPanel panel = new JPanel(new BorderLayout());
-   
-    JPanel bottomPanel = new JPanel(new BorderLayout());
-
+    panel = new JPanel(new BorderLayout());
+    bottomPanel = new JPanel(new BorderLayout());
     bottomPanel.add(textField, BorderLayout.CENTER);
-
-    //bottomPanel.add(reset, BorderLayout.WEST);
     bottomPanel.add(textField, BorderLayout.CENTER);
     bottomPanel.add(submit, BorderLayout.EAST);
-    
     panel.add(bottomPanel, BorderLayout.SOUTH);
-    
     panel.add(table, BorderLayout.CENTER);
-    
     frame.getContentPane().add(panel);
-
     frame.setSize(510,510);
-
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    
-    
-    reset.addActionListener(new ActionListener() {
-
-      @Override
-
-      public void actionPerformed(ActionEvent arg0) {
-
-        resetButtonPressed();
-
-      }
-
-    });
-    
+ 
     submit.addActionListener(new ActionListener() {
-
       @Override
-
       public void actionPerformed(ActionEvent arg0) {
-        
         buttonPressed(numCols);
-
       }
-
     });
     
     frame.setVisible(true);
-  }
-  
-  private void resetButtonPressed() {
-    model.resetGame(true);
   }
   
   public void shutFrame() {
@@ -136,7 +107,6 @@ public class Player implements IListener {
   }
   
   private void buttonPressed(int numCols) {
-    
     String getTextEntered = textField.getText();
     if (getTextEntered.equals("")) {
       JOptionPane.showMessageDialog(frame, "Please enter a valid column.\n");
@@ -159,9 +129,7 @@ public class Player implements IListener {
     }
     textField.setText("");
     model.selectColumnForMove(this, num);
-
   }
-  
   
   @Override
   public void gameStartSignal(IListener firstPlayerToGo) {
@@ -171,10 +139,7 @@ public class Player implements IListener {
       JOptionPane.showMessageDialog(frame, 
           "Waiting for " + firstPlayerToGo.getId() + " to start...\n");
     }
-    //prevent game from being reset at this stage
-    reset.setEnabled(false);
   }
-
 
   @Override
   public void invalidTurnNotify() {
@@ -197,7 +162,7 @@ public class Player implements IListener {
     //Render board
     char[][] board = model.getCopyOfGameBoard();
     char myColor = getPiece();
-    char opponentColor = ((myColor == 'Y') ? 'R' : 'Y');
+    char opponentColor = ((myColor == player1Color) ? player2Color : player1Color);
     for (int i = 0; i < board.length; i ++) {
       for (int j = 0; j < board[0].length; j ++) {
         if (board[i][j] == myColor) {
@@ -225,13 +190,11 @@ public class Player implements IListener {
     } else {
       JOptionPane.showMessageDialog(frame, "Sorry, you lost!\n");
     }
-    
-    reset.setEnabled(false);
     submit.setEnabled(false);
   }
 
   @Override
-  public void gameOverNotify() {
+  public void gameTied() {
     JOptionPane.showMessageDialog(frame, "Game Over - No Winner!\n");
     char[][] board = model.getCopyOfGameBoard();
     for (int i = 0; i < board.length; i ++) {
@@ -241,8 +204,6 @@ public class Player implements IListener {
         }
       }
     }
-    
-    reset.setEnabled(false);
     submit.setEnabled(false);
   }
 

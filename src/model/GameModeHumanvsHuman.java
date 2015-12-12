@@ -5,7 +5,7 @@ import java.util.Set;
 import utilities.ListenerInformation;
 import views.IListener;
 
-public class GameModeHumanvsHuman implements GameMode {
+public class GameModeHumanvsHuman implements IGameMode {
   private static GameModeHumanvsHuman singleInstance = null;
   private static GameBoard board;
   private Set<IListener> listeners;
@@ -17,8 +17,10 @@ public class GameModeHumanvsHuman implements GameMode {
   private IListener turnOfPlayer;
   //Unique ID for every non-player listener
   private int listenerID;
+  private final char noWinner = 'N';
+  private final char player1color = 'Y';
+  private final char player2color = 'R';
   
-  //Does not initialize the board. Must be done separately on reset.
   private void initializeGame() {
     playerCount = 0;
     allowedNumberOfPlayers = 2;
@@ -28,6 +30,7 @@ public class GameModeHumanvsHuman implements GameMode {
     player2 = null;
     turnOfPlayer = null;
     listenerID = 0;
+    board = new GameBoard();
   }
   
   /**For testing purposes only*/
@@ -48,34 +51,19 @@ public class GameModeHumanvsHuman implements GameMode {
     return playerCount;
   }
   
-  /**
-   * Returns number of columns on the board
-   */
-  public int getNumberOfColumnsOnBoard() {
-    return board.getNumberOfCols();
-  }
-  
-  private GameModeHumanvsHuman(int numberOfColumns) {
+  private GameModeHumanvsHuman() {
     initializeGame();
-    if (numberOfColumns == 7) {
-      board = new GameBoard.Builder().build();
-    } else {
-      board = new GameBoard.Builder().numberOfColumns(numberOfColumns).build();
-    }
   }
   
   /**
    * Singleton class - use getModelInstance(...) to get instance.
-   * @param numberOfColums - how many columns in game. Number of rows
-   * is fixed at 6. If number of columns is less than one, it will
-   * result in the default value of 7.
-   * @return - instance of the model. To reset, call resetGame(...).
+   * @return - instance of the model.
    */
-  public static GameModeHumanvsHuman getModelInstance(int numberOfColumns) {
+  public static GameModeHumanvsHuman getModelInstance() {
     if (singleInstance != null) {
       return singleInstance;
     }
-    singleInstance = new GameModeHumanvsHuman(numberOfColumns);
+    singleInstance = new GameModeHumanvsHuman();
     return singleInstance;
   }
 
@@ -110,12 +98,12 @@ public class GameModeHumanvsHuman implements GameMode {
     char playerPieceColor;
     String playerID;
     if (player1 == null) {
-      playerPieceColor = 'Y';
+      playerPieceColor = player1color;
       playerID = "Player1";
       player1 = newListener;
       turnOfPlayer = player1;
     } else {
-      playerPieceColor = 'R';
+      playerPieceColor = player2color;
       playerID = "player2";
       player2 = newListener;
       //Set gameInProgress once we have both players
@@ -142,7 +130,7 @@ public class GameModeHumanvsHuman implements GameMode {
       player.invalidTurnNotify();
       return false;
     }
-    char pieceColor = ((player == player1) ? 'Y' : 'R');
+    char pieceColor = ((player == player1) ? player1color: player2color);
     boolean result = board.updateBoardForMove(column, pieceColor);
     if (!result) {
       player.invalidMoveNotify();
@@ -152,18 +140,16 @@ public class GameModeHumanvsHuman implements GameMode {
       toggleTurnOfPlayer();
     }
     int row = board.getMostRecentRowFilled(column);
-    char winner = board.findWinner(row, column);
-    if (winner != 'N') {
+    char winner = board.findWinner(row, column, player1color, player2color, noWinner);
+    if (winner != noWinner) {
       fireGameWonEvent(player.getPiece());
       gameInProgress = false;
-      resetGame(false);
       return true;
     }
     //Tied/No winner but board is full
     if (board.isGameOver()) {
       fireGameOverEvent();
       gameInProgress = false;
-      resetGame(false);
       return true;
     }
     return true;
@@ -183,7 +169,7 @@ public class GameModeHumanvsHuman implements GameMode {
   
   public void fireGameOverEvent() {
     for (IListener view : listeners) {
-      view.gameOverNotify();
+      view.gameTied();
     }
   }
   
@@ -205,25 +191,19 @@ public class GameModeHumanvsHuman implements GameMode {
   IListener getCurrentPlayer() {
     return turnOfPlayer;
   }
-  
-  @Override
-  public boolean resetGame(boolean shutWindow) {
-    if (gameInProgress) {
-      throw new UnsupportedOperationException();
-    }
-    if (shutWindow) {
-      for (IListener listener : listeners) {
-        listener.shutFrame();
-      }
-    }
-    initializeGame();
-    board.resetBoard();
-    return true;
-  }
 
   @Override
   public char[][] getCopyOfGameBoard() {
     return board.returnBoardCurrentState();
   }
   
+  @Override
+  public int getNumberOfCols() {
+    return board.getNumberOfCols();
+  }
+
+  @Override
+  public int getNumberOfRows() {
+    return board.getNumberOfRows();
+  }
 }

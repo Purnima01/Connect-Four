@@ -13,65 +13,19 @@ import java.util.Random;
 
 class GameBoard {
   private char[][] board;
-  private int numCols;
-  private int numRows;
-  private final int MAXROWNUM;
-  private final int MAXCOLNUM;
-  private Random r = new Random();
+  private final int MAXROWNUM = 6;
+  private final int MAXCOLNUM = 7;
+  private Random rand = new Random();
   
-  public static class Builder {
-    char[][] board;
-    int numCols;
-    int numRows;
-    final int MAXROWNUM;
-    int MAXCOLNUM;
-    
-    public Builder() {
-      numCols = 7;
-      numRows = 6;
-      MAXROWNUM = 5;
-      MAXCOLNUM = numCols - 1;
-    }
-    
-    public Builder numberOfColumns(int cols) {
-      if (cols <= 0) {
-        return this;
-      }
-      
-      numCols = cols;
-      MAXCOLNUM = numCols - 1;
-      return this;
-    }
-    
-    public GameBoard build() {
-      board = new char[numRows][numCols];
-      return new GameBoard(this);
-    } 
-    
-  }
-  
-  // Package-visible method for testing
-  char[][] getBoardForTesting() {
-    return board;
-  }
-  
-  int getNumberOfCols() {
-    return numCols;
-  }
-  
-  private GameBoard(Builder builder) {
-    board = builder.board;
-    numCols = builder.numCols;
-    numRows = builder.numRows;
-    MAXROWNUM = builder.MAXROWNUM;
-    MAXCOLNUM = builder.MAXCOLNUM;
+  public GameBoard() {
+    board = new char[MAXROWNUM][MAXCOLNUM];
     initializeBoard();
   }
   
   //Initialize cells to space
   private void initializeBoard() {
-    for (int row = 0; row <= MAXROWNUM; row ++) {
-      for (int col = 0; col <= MAXCOLNUM; col ++) {
+    for (int row = 0; row <= (MAXROWNUM - 1); row ++) {
+      for (int col = 0; col <= (MAXCOLNUM - 1); col ++) {
         board[row][col] = ' '; 
       }
     }
@@ -81,9 +35,9 @@ class GameBoard {
    * Returns a deep copy of the current state of the board: O(Rows * Columns) operation.
    */
   public char[][] returnBoardCurrentState() {
-    char[][] copyOfBoard = new char[numRows][numCols];
-    for (int i = 0; i < numRows; i ++) {
-      copyOfBoard[i] = Arrays.copyOf(board[i], numCols);
+    char[][] copyOfBoard = new char[MAXROWNUM][MAXCOLNUM];
+    for (int i = 0; i < MAXROWNUM; i ++) {
+      copyOfBoard[i] = Arrays.copyOf(board[i], MAXCOLNUM);
     }
     return copyOfBoard;
   }
@@ -112,7 +66,7 @@ class GameBoard {
    * @return -1 if no win moves for computer exist
    */
   public int computerFindNextWinMove(char playerColor) {
-    for (int col = 0; col <= MAXCOLNUM; col ++) {
+    for (int col = 0; col <= (MAXCOLNUM - 1); col ++) {
       //If the column is already full, try next column
       if (board[0][col] != ' ') {
         continue;
@@ -124,7 +78,7 @@ class GameBoard {
         win for the computer, place disk there. Else, go on to next
         column and repeat process.
        */
-      for (int row = MAXROWNUM; row >= 0; row --) {
+      for (int row = (MAXROWNUM - 1); row >= 0; row --) {
         if (board[row][col] != ' ') {
           continue;
         }
@@ -140,15 +94,15 @@ class GameBoard {
    * Find a non-empty column for move
    */
   public int computerFindNextRegularMove() {
-    int colGeneratedAtRandom = r.nextInt(numCols);
+    int colGeneratedAtRandom = rand.nextInt(MAXCOLNUM);
     while (board[0][colGeneratedAtRandom] != ' ') {
-      colGeneratedAtRandom = r.nextInt(numCols);
+      colGeneratedAtRandom = rand.nextInt(MAXCOLNUM);
     }
     return colGeneratedAtRandom;
   }
   
   private boolean validateMoveForColumn(int col) {
-    if ((col < 0) || (col > MAXCOLNUM)) {
+    if ((col < 0) || (col > (MAXCOLNUM - 1))) {
       return false;
     }
     if (getFirstEmptyRowFromBottom(col) == -1) {
@@ -157,9 +111,11 @@ class GameBoard {
     return true;
   }
   
-  //Returns -1 if column is full
+  /**first empty row for a column
+   * @return -1 if column is full
+   */
   public int getFirstEmptyRowFromBottom(int col) {
-    for (int i = MAXROWNUM; i >= 0; i --) {
+    for (int i = (MAXROWNUM - 1); i >= 0; i --) {
       if (board[i][col] == ' ') {
         return i;
       }
@@ -174,10 +130,8 @@ class GameBoard {
    * @return corresponding char of player
    * if there is a winner
    */
-  public char findWinner(int newPieceRow, int newPieceCol) {
-    char player1PieceColor = 'Y';
-    char player2PieceColor = 'R';
-    char noWinner = 'N';
+  public char findWinner(int newPieceRow, int newPieceCol,
+      char player1PieceColor, char player2PieceColor, char noWinner) {
     
     if (winPlayer(newPieceRow, newPieceCol, player1PieceColor) && 
         (board[newPieceRow][newPieceCol] == player1PieceColor)) {
@@ -217,9 +171,9 @@ class GameBoard {
    * 
    */
   
-  boolean verticalWin(int row, int col, char playerPieceColor) {
+  private boolean verticalWin(int row, int col, char playerPieceColor) {
     // Less than 4 of player's pieces in this column
-    if (row >= (MAXROWNUM - 2)) {
+    if (row >= ((MAXROWNUM - 1) - 2)) {
       return false;
     }
     for (int i = (row + 1); i < (row + 4); i ++) {
@@ -231,7 +185,7 @@ class GameBoard {
     return true;
   }
   
-  boolean horizontalWin(int row, int col, char playerPieceColor) {
+  private boolean horizontalWin(int row, int col, char playerPieceColor) {
     int leftPlayerPieceCount = 0;
     int rightPlayerPieceCount = 0;
     
@@ -242,7 +196,7 @@ class GameBoard {
       leftPlayerPieceCount ++;
     }
     
-    for (int i = col + 1; i <= MAXCOLNUM; i ++) {
+    for (int i = col + 1; i <= (MAXCOLNUM - 1); i ++) {
       if (board[row][i] != playerPieceColor) {
         break;
       }
@@ -262,7 +216,7 @@ class GameBoard {
   /**
    * going right from bottom to top
    */
-  boolean rightDiagonalWin(int row, int col, char playerPieceColor) {
+  private boolean rightDiagonalWin(int row, int col, char playerPieceColor) {
     int playerPiecesBottomLeft = countPiecesBottomLeft(row, col, playerPieceColor); 
     int playerPiecesTopRight = countPiecesTopRight(row, col, playerPieceColor);
     if ((playerPiecesBottomLeft + playerPiecesTopRight) >= 3) {
@@ -274,7 +228,7 @@ class GameBoard {
   /**
    * going left from bottom to top
    */
-  boolean leftDiagonalWin(int row, int col, char playerPieceColor) {
+  private boolean leftDiagonalWin(int row, int col, char playerPieceColor) {
     int playerPiecesTopLeft = countPiecesTopLeft(row, col, playerPieceColor);
     int playerPiecesBottomRight = countPiecesBottomRight(row, col, playerPieceColor);
     if ((playerPiecesTopLeft + playerPiecesBottomRight) >= 3) {
@@ -283,11 +237,11 @@ class GameBoard {
     return false;
   }
   
-  int countPiecesBottomLeft(int row, int col, char piece) {
+  private int countPiecesBottomLeft(int row, int col, char piece) {
     int count = 0;
     row = row + 1;
     col = col - 1;
-    while (row <= MAXROWNUM && col >= 0) {
+    while (row <= (MAXROWNUM - 1) && col >= 0) {
       if (board[row][col] != piece) {
         break;
       }
@@ -298,11 +252,11 @@ class GameBoard {
     return count;
   }
   
-  int countPiecesTopRight(int row, int col, char piece) {
+  private int countPiecesTopRight(int row, int col, char piece) {
     int count = 0;
     row = row - 1;
     col = col + 1;
-    while (row >= 0 && col <= MAXCOLNUM) {
+    while (row >= 0 && col <= (MAXCOLNUM - 1)) {
       if (board[row][col] != piece) {
         break;
       }
@@ -313,7 +267,7 @@ class GameBoard {
     return count;
   }
   
-  int countPiecesTopLeft(int row, int col, char piece) {
+  private int countPiecesTopLeft(int row, int col, char piece) {
     int count = 0;
     row = row - 1;
     col = col - 1;
@@ -328,11 +282,11 @@ class GameBoard {
     return count;
   }
   
-  int countPiecesBottomRight(int row, int col, char piece) {
+  private int countPiecesBottomRight(int row, int col, char piece) {
     int count = 0;
     row = row + 1;
     col = col + 1;
-    while (row <= MAXROWNUM && col <= MAXCOLNUM) {
+    while (row <= (MAXROWNUM - 1) && col <= (MAXCOLNUM - 1)) {
       if (board[row][col] != piece) {
         break;
       }
@@ -348,7 +302,7 @@ class GameBoard {
    */
   
   public boolean isGameOver() {
-    for (int i = 0; i <= MAXCOLNUM; i ++) {
+    for (int i = 0; i <= (MAXCOLNUM - 1); i ++) {
       // If the top row is occupied (but no winner) game is over
       if (board[0][i] == ' ') {
         return false;
@@ -356,33 +310,16 @@ class GameBoard {
     }
     return true;
   }
-  
-  /**
-   * Resets to a new board 
-   */
-  
-  public void resetBoard() {
-    initializeBoard();
-  }
-  
-  void printBoard() {
-    for (int i = 0; i <= MAXROWNUM; i ++) {
-      for (int j = 0; j <= MAXCOLNUM; j ++) {
-        System.out.print(board[i][j] + " ");
-      }
-      System.out.println();
-    }
-  }
 
   /**
    * Returns -1 if column is empty/was not touched even once
    */
   public int getMostRecentRowFilled(int column) {
     //If last row for column is empty, the column was never filled
-    if (board[MAXROWNUM][column] == ' ') {
+    if (board[MAXROWNUM - 1][column] == ' ') {
       return -1;
     }
-    for (int row = MAXROWNUM; row >= 0; row --) {
+    for (int row = (MAXROWNUM - 1); row >= 0; row --) {
       if (board[row][column] == ' ') {
         return (row + 1);
       }
@@ -390,22 +327,12 @@ class GameBoard {
     return 0;
   }
   
-  //For testing deep copy
-  boolean compareBoardContents(char[][] board1, char[][] board2) {
-    if (board1.length != board2.length) {
-      return false;
-    }
-    if (board1[0].length != board2[0].length) {
-      return false;
-    }
-    for (int i = 0; i < board1.length; i ++) {
-      for (int j = 0; j < board1[0].length; j ++) {
-        if (board1[i][j] != board2[i][j]) {
-          return false;
-        }
-      }
-    }
-    return true;
+  public int getNumberOfRows() {
+    return MAXROWNUM;
+  }
+  
+  public int getNumberOfCols() {
+    return MAXCOLNUM;
   }
   
 }

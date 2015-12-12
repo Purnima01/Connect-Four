@@ -12,7 +12,7 @@ import views.IListener;
  * 
  * Computer plays as the second player - R.
  */
-public class GameModeHumanvsComputer implements GameMode {
+public class GameModeHumanvsComputer implements IGameMode {
   private static GameModeHumanvsComputer singleInstance = null;
   private static GameBoard board;
   private Set<IListener> listeners;
@@ -22,9 +22,11 @@ public class GameModeHumanvsComputer implements GameMode {
   private boolean gameInProgress;
   //Unique ID for every non-player listener
   private int listenerID;
-  private char computerPiece = 'R';
+  private char player1color = 'Y';
+  private char player2color = 'R';
+  private char computerPiece = player2color;
+  private final char noWinner = 'N';
   
-  //Does not initialize the board. Must be done separately on reset.
   private void initializeGame() {
     playerCount = 0;
     allowedNumberOfPlayers = 1;
@@ -32,36 +34,22 @@ public class GameModeHumanvsComputer implements GameMode {
     listeners = new HashSet<IListener>();
     player1 = null;
     listenerID = 0;
+    board = new GameBoard();
   }
   
-  /**
-   * Returns number of columns on the board
-   */
-  public int getNumberOfColumnsOnBoard() {
-    return board.getNumberOfCols();
-  }
-  
-  private GameModeHumanvsComputer(int numberOfColumns) {
+  private GameModeHumanvsComputer() {
     initializeGame();
-    if (numberOfColumns == 7) {
-      board = new GameBoard.Builder().build();
-    } else {
-      board = new GameBoard.Builder().numberOfColumns(numberOfColumns).build();
-    }
   }
   
   /**
-   * Singleton class - use getModelInstance(...) to get instance.
-   * @param numberOfColums - how many columns in game. Number of rows
-   * is fixed at 6. If number of columns is less than one, it will
-   * result in the default value of 7.
-   * @return - instance of the model. To reset, call resetGame(...).
+   * Singleton class - use getModelInstance() to get instance.
+   * @return - instance of the model.
    */
-  public static GameModeHumanvsComputer getModelInstance(int numberOfColumns) {
+  public static GameModeHumanvsComputer getModelInstance() {
     if (singleInstance != null) {
       return singleInstance;
     }
-    singleInstance = new GameModeHumanvsComputer(numberOfColumns);
+    singleInstance = new GameModeHumanvsComputer();
     return singleInstance;
   }
   
@@ -89,7 +77,7 @@ public class GameModeHumanvsComputer implements GameMode {
       return null;
     }
     //Valid player addition
-    char playerPieceColor = 'Y';
+    char playerPieceColor = player1color;
     String playerID;
     playerID = "Player1";
     player1 = newListener;
@@ -109,7 +97,7 @@ public class GameModeHumanvsComputer implements GameMode {
       player.gameNotInProgressNotify();
       return false;
     }
-    char humanPieceColor = 'Y';
+    char humanPieceColor = player1color;
     boolean result = board.updateBoardForMove(column, humanPieceColor);
     if (!result) {
       player.invalidMoveNotify();
@@ -120,7 +108,7 @@ public class GameModeHumanvsComputer implements GameMode {
     
     //Is there a winner or is game over after human's move?
     int row = board.getMostRecentRowFilled(column);
-    char winner = board.findWinner(row, column);
+    char winner = board.findWinner(row, column, player1color, player2color, noWinner);
     if (winnerCheckRoutine(winner, humanPieceColor)) {
       return true;
     }
@@ -135,7 +123,8 @@ public class GameModeHumanvsComputer implements GameMode {
     
     //Is there a winner or is game over after computer move?
     int rowFilled = board.getMostRecentRowFilled(computerSelectedColumn);
-    winner = board.findWinner(rowFilled, computerSelectedColumn);
+    winner = board.findWinner(rowFilled, computerSelectedColumn, 
+        player1color, player2color, noWinner);
     if (winnerCheckRoutine(winner, computerPiece)) {
       return true;
     }
@@ -155,10 +144,9 @@ public class GameModeHumanvsComputer implements GameMode {
   }
   
   private boolean winnerCheckRoutine(char winner, char playerPiece) {
-    if (winner != 'N') {
+    if (winner != noWinner) {
       fireGameWonEvent(playerPiece);
       gameInProgress = false;
-      resetGame(false);
       return true;
     }
     return false;
@@ -173,7 +161,6 @@ public class GameModeHumanvsComputer implements GameMode {
     if (board.isGameOver()) {
       fireGameOverEvent();
       gameInProgress = false;
-      resetGame(false);
       return true;
     }
     return false;
@@ -193,7 +180,7 @@ public class GameModeHumanvsComputer implements GameMode {
   
   public void fireGameOverEvent() {
     for (IListener view : listeners) {
-      view.gameOverNotify();
+      view.gameTied();
     }
   }
   
@@ -201,21 +188,6 @@ public class GameModeHumanvsComputer implements GameMode {
     for (IListener view : listeners) {
       view.gameStartSignal(firstPlayerToGo);
     }
-  }
-  
-  @Override
-  public boolean resetGame(boolean shutWindow) {
-    if (gameInProgress) {
-      throw new UnsupportedOperationException();
-    }
-    if (shutWindow) {
-      for (IListener listener : listeners) {
-        listener.shutFrame();
-      }
-    }
-    initializeGame();
-    board.resetBoard();
-    return true;
   }
 
   @Override
@@ -230,6 +202,16 @@ public class GameModeHumanvsComputer implements GameMode {
 
   void setSingleInstanceToNull() {
     singleInstance = null;
+  }
+
+  @Override
+  public int getNumberOfCols() {
+    return board.getNumberOfCols();
+  }
+
+  @Override
+  public int getNumberOfRows() {
+    return board.getNumberOfRows();
   }
   
 }
