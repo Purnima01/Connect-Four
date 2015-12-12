@@ -1,7 +1,7 @@
 package model;
 import utilities.Mode;
 /**
- * Factory class to get the appropriate type of class for mode.
+ * Factory class to get the appropriate type of object for mode.
  */
 
 public class GameFactory {
