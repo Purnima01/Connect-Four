@@ -11,7 +11,7 @@ public class GameModeHumanvsHuman extends GameModeBase {
   }
   
   /**
-   * Singleton class - use getModelInstance(...) to get instance.
+   * Singleton class - use getModelInstance() to get instance.
    * @return - instance of the model.
    */
   public static GameModeHumanvsHuman getModelInstance() {
