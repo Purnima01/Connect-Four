@@ -67,6 +67,15 @@ public class GameModeHumanvsHuman implements IGameMode {
     return singleInstance;
   }
 
+  private ListenerInformation nonPlayerListener(IListener newListener) {
+    listeners.add(newListener);
+    String listenerNumber = String.valueOf(listenerID);
+    String id = "Listener" + listenerNumber;
+    ListenerInformation newListenerInformation = new ListenerInformation('G', id); 
+    listenerID ++;
+    return newListenerInformation;
+  }
+  
   /**
    * Non-players assigned G (gray) to distinguish them from players,
    * who are assigned Y -for first player- and R -for the second.
@@ -76,35 +85,22 @@ public class GameModeHumanvsHuman implements IGameMode {
     if (newListener == null) {
       return null;
     }
-    
-    //Non-player
     if (!isPlayer) {
-      listeners.add(newListener);
-      String listenerNumber = String.valueOf(listenerID);
-      String id = "Listener" + listenerNumber;
-      ListenerInformation newListenerInformation = new ListenerInformation('G', id); 
-      listenerID ++;
-      return newListenerInformation;
+      return nonPlayerListener(newListener);
     }
-    //Already have two players - malicious addition.
     if (playerCount >= allowedNumberOfPlayers) {
       return null;
     }
-    //Prevent duplicate registration of a listener
     if (listeners.contains(newListener)) {
       return null;
     }
-    //Valid player addition
-    char playerPieceColor;
-    String playerID;
+    ListenerInformation newInformation = null;
     if (player1 == null) {
-      playerPieceColor = player1color;
-      playerID = "Player1";
+      newInformation = getPlayerInformation(player1color, "Player1");
       player1 = newListener;
       turnOfPlayer = player1;
     } else {
-      playerPieceColor = player2color;
-      playerID = "player2";
+      newInformation = getPlayerInformation(player2color, "Player2");
       player2 = newListener;
       //Set gameInProgress once we have both players
       gameInProgress = true;
@@ -115,11 +111,13 @@ public class GameModeHumanvsHuman implements IGameMode {
     if (playerCount == allowedNumberOfPlayers) {
       startGameNotify(player1);
     }
-    
-    ListenerInformation newInformation = new ListenerInformation(playerPieceColor, playerID);
     return newInformation;
   }
   
+  private ListenerInformation getPlayerInformation(char playerPieceColor, String playerID) {
+    return new ListenerInformation(playerPieceColor, playerID);
+  }
+
   @Override
   public boolean selectColumnForMove(IListener player, int column) {
     if (!gameInProgress) {
@@ -146,9 +144,8 @@ public class GameModeHumanvsHuman implements IGameMode {
       gameInProgress = false;
       return true;
     }
-    //Tied/No winner but board is full
     if (board.isGameOver()) {
-      fireGameOverEvent();
+      fireGameTied();
       gameInProgress = false;
       return true;
     }
@@ -167,7 +164,7 @@ public class GameModeHumanvsHuman implements IGameMode {
     }
   }
   
-  public void fireGameOverEvent() {
+  public void fireGameTied() {
     for (IListener view : listeners) {
       view.gameTied();
     }

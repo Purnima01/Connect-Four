@@ -53,33 +53,30 @@ public class GameModeHumanvsComputer implements IGameMode {
     return singleInstance;
   }
   
+  private ListenerInformation nonPlayerListener(IListener newListener) {
+    listeners.add(newListener);
+    String listenerNumber = String.valueOf(listenerID);
+    String id = "Listener" + listenerNumber;
+    ListenerInformation newListenerInformation = new ListenerInformation('G', id); 
+    listenerID ++;
+    return newListenerInformation;
+  }
+  
   @Override
   public ListenerInformation registerListener(IListener newListener, boolean isPlayer) {
     if (newListener == null) {
       return null;
     }
-    
-    //Non-player
     if (!isPlayer) {
-      listeners.add(newListener);
-      String listenerNumber = String.valueOf(listenerID);
-      String id = "Listener" + listenerNumber;
-      ListenerInformation newListenerInformation = new ListenerInformation('G', id); 
-      listenerID ++;
-      return newListenerInformation;
+      return nonPlayerListener(newListener);
     }
-    //Already have two players - malicious addition.
     if (playerCount >= allowedNumberOfPlayers) {
       return null;
     }
-    //Prevent duplicate registration of a listener
     if (listeners.contains(newListener)) {
       return null;
     }
-    //Valid player addition
-    char playerPieceColor = player1color;
-    String playerID;
-    playerID = "Player1";
+    ListenerInformation newInformation = new ListenerInformation(player1color, "Player1");
     player1 = newListener;
     //Set gameInProgress once we have the player
     gameInProgress = true;
@@ -87,7 +84,6 @@ public class GameModeHumanvsComputer implements IGameMode {
     listeners.add(newListener);
     startGameNotify(player1);
     playerCount ++;
-    ListenerInformation newInformation = new ListenerInformation(playerPieceColor, playerID);
     return newInformation;
   }
   
@@ -105,8 +101,6 @@ public class GameModeHumanvsComputer implements IGameMode {
     } else {
       fireMoveMadeEvent();
     }
-    
-    //Is there a winner or is game over after human's move?
     int row = board.getMostRecentRowFilled(column);
     char winner = board.findWinner(row, column, player1color, player2color, noWinner);
     if (winnerCheckRoutine(winner, humanPieceColor)) {
@@ -115,13 +109,11 @@ public class GameModeHumanvsComputer implements IGameMode {
     if (gameOverCheckRoutine()) {
       return true;
     }
-    
     //Computer makes a move: check if win move exists. if not, make regular move.
     int computerSelectedColumn = computerMove(computerPiece);
     board.updateBoardForMove(computerSelectedColumn, computerPiece);
     fireMoveMadeEvent();
     
-    //Is there a winner or is game over after computer move?
     int rowFilled = board.getMostRecentRowFilled(computerSelectedColumn);
     winner = board.findWinner(rowFilled, computerSelectedColumn, 
         player1color, player2color, noWinner);
